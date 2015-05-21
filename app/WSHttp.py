@@ -96,6 +96,18 @@ class WSHttp():
         page = response.read()
         return page.decode('gbk', 'ignore').encode('utf-8')
 
+    def postClassroomInfo(self, campus_id, building_id, room_id, valCode, semester):
+        url = 'http://gl.sycm.com.cn/Jwweb/ZNPK/KBFB_RoomSel_rpt.aspx'
+        values = {'Sel_XNXQ': semester, 'Sel_XQ': campus_id, 'Sel_JXL': building_id,
+                  'Sel_ROOM': room_id, 'txt_yzm': val_code}
+        data = urllib.urlencode(values)
+        request = urllib2.Request(url, data)
+        request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0')
+        request.add_header('Referer', 'http://gl.sycm.com.cn/Jwweb/ZNPK/KBFB_RoomSel.aspx')
+        response = self.opener.open(request)
+        page = response.read()
+        return page.decode('gbk', 'ignore').encode('utf-8')
+
     def isCorrectValCode(self, page):
         if page.find('验证码错误') == -1:
             return True
@@ -147,7 +159,6 @@ class WSHttp():
             return {'status': e.code}
         except urllib2.URLError, e:
             return {'status': e.errno}
-            pass
 
     def courseInfoWrapper(self, course_id, valCode, semester, type='1'):
         """
@@ -163,13 +174,27 @@ class WSHttp():
             return {'status': e.code}
         except urllib2.URLError, e:
             return {'status': e.errno}
-            pass
+
+    def classroomInfoWrapper(self, campus_id, building_id, room_id, valCode, semester):
+        try:
+            page = self.postClassroomInfo(campus_id, building_id, room_id, valCode, semester)
+            if not self.isCorrectValCode(page):
+                return {'status': VAL_CODE_INCORRECT}
+            return self.resolveCourseTable(page)
+        except urllib2.HTTPError, e:
+            return {'status': e.code}
+        except urllib2.URLError, e:
+            return {'status': e.errno}
+
 
 if __name__ == '__main__':
+    import json
     client = WSHttp()
-    f = open('/home/guti/Downloads/test.jpeg', 'w')
+    f = open('d:\\test.jpeg', 'wb')
     f.write(client.getValCode())
     f.close()
     val_code = raw_input('val_code:')
     # print client.courseDictWrapper('0000063', val_code, '20141')
-    print client.courseInfoWrapper('000003', val_code, '20141')
+    d = client.classroomInfoWrapper('1', '105', '1050101', val_code, '20141')
+    print d
+    print json.dumps(d, indent=4)
