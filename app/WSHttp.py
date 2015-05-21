@@ -48,9 +48,9 @@ class WSHttp():
     def resolveCourseDict(self):
         """
         解析课程列表
-        :return:
+        :return: dict
         """
-        return  self.resolveOptionDict('../Data/Course.html')
+        return self.resolveOptionDict('../Data/Course.html')
 
     def resolveOptionDict(self, fileName):
         """
@@ -195,6 +195,7 @@ if __name__ == '__main__':
     f.close()
     val_code = raw_input('val_code:')
     # print client.courseDictWrapper('0000063', val_code, '20141')
-    d = client.classroomInfoWrapper('1', '105', '1050101', val_code, '20141')
+    # d = client.classroomInfoWrapper('1', '105', '1050101', val_code, '20141')
+    d = client.courseInfoWrapper('000003', val_code, '20141')
     print d
     print json.dumps(d, indent=4)

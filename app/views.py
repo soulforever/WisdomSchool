@@ -11,7 +11,7 @@ import WSHttp
 import time
 from app import app, db
 from flask import request, abort, jsonify, session
-from models import TeacherCourse
+from models import TeacherCourse, CourseInfo
 
 
 c_dict = dict()
@@ -31,7 +31,7 @@ def getValCode():
 
 
 @app.route('/ws/api/teacher', methods=['POST'])
-def teacherCourseDict():
+def teacherCourse():
     """
     教师信息获取，无验证码表示从本地查询，带有验证码表示从远端获取
     """
@@ -53,18 +53,6 @@ def teacherCourseDict():
     return jsonify(data), 201
 
 
-def webGetTeacherCourse(teacher_id, val_code, semester):
-    """
-    远端获取教师课程数据
-    """
-    print 'webGetTeacherCourse'
-    if 'id' not in session:
-        abort(400)
-    data = c_dict[session['id']].teacherCourseWrapper(teacher_id, val_code, semester)
-    del c_dict[session['id']]
-    return data
-
-
 def localGetTeacherCourse(teacher_id, semester):
     """
     本地查询教师课程
@@ -75,6 +63,18 @@ def localGetTeacherCourse(teacher_id, semester):
         data = {'status': WSHttp.LOCAL_DATA_MISS}
     else:
         data = json.loads(teacher_course.course_data, encoding='utf-8')
+    return data
+
+
+def webGetTeacherCourse(teacher_id, val_code, semester):
+    """
+    远端获取教师课程数据
+    """
+    print 'webGetTeacherCourse'
+    if 'id' not in session:
+        abort(400)
+    data = c_dict[session['id']].teacherCourseWrapper(teacher_id, val_code, semester)
+    del c_dict[session['id']]
     return data
 
 
@@ -93,11 +93,75 @@ def saveTeacherCourseData(teacher_id, semester, data):
     db.session.commit()
 
 
+@app.route('/ws/api/course', methods=['POST'])
+def courseInfo():
+    """
+    课程信息获取，无验证码从本地查询，带有验证码从远端获取
+    """
+    if not request.json or 'course_id' not in request.json:
+        abort(404)
+    course_id = request.json['course_id']
+    semester = '20141'
+    val_code = ''
+    if 'val_code' in request.json:
+        print 11
+        val_code = request.json['val_code']
+    if 'semester' in request.json:
+        semester = request.json['semester']
+    # 分离网络本地查询
+    if val_code == '':
+        data = localGetCourseIndfo(course_id, semester)
+    else:
+        data = webGetCourseInfo(course_id, val_code, semester)
+        saveCourseInfoData(course_id, semester, data)
+    return jsonify(data), 201
+
+
+def localGetCourseIndfo(course_id, semester):
+    """
+    本地查询课程信息
+    """
+    print 'localGetCourseInfo'
+    course_info = CourseInfo.query.filter_by(course_id=course_id, semester=semester).first()
+    if course_info is None:
+        data = {'status': WSHttp.LOCAL_DATA_MISS}
+    else:
+        data = json.loads(course_info.course_data, encoding='utf-8')
+    return data
+
+
+def webGetCourseInfo(course_id, val_code, semester):
+    """
+    远端获取课程信息数据
+    """
+    print 'webGetCourseInfo'
+    if 'id' not in session:
+        abort(400)
+    data = c_dict[session['id']].courseInfoWrapper(course_id, val_code, semester)
+    del c_dict[session['id']]
+    return data
+
+
+def saveCourseInfoData(course_id, semester, data):
+    """
+    保存远端下载的课程信息数据到本地
+    """
+    print 'saveCourseInfoData'
+    j_data = json.dumps(data)
+    course_info = CourseInfo.query.filter_by(course_id=course_id, semester=semester).first()
+    if course_info is None:
+        course_info = CourseInfo(course_id=course_id, semester=semester, course_data=j_data)
+    else:
+        course_info.course_data = j_data
+    db.session.add(course_info)
+    db.session.commit()
+
+
 @app.errorhandler(404)
-def error_404():
+def error_404(error):
     return jsonify({'status': 404})
 
 
 @app.errorhandler(500)
-def error_500():
+def error_500(error):
     return jsonify({'status': 500})
