@@ -31,22 +31,26 @@ class WSHttp():
         data = response.read()
         return data
 
-
     def resolveTeacherDict(self):
         """
         获取教师字典，工号为键，姓名为值
         :return: dict
         """
-        return self.resolveOptionDict('Data/Teacher.html')
-
+        return self.resolveOptionDict('../Data/Teacher.html')
 
     def resolveSemesterDict(self):
         """
         获取学年学期字典，数字数据为键，文字标识为值
         :return: dict
         """
-        return self.resolveOptionDict('Data/Semester.html')
+        return self.resolveOptionDict('../Data/Semester.html')
 
+    def resolveCourseDict(self):
+        """
+        解析课程列表
+        :return:
+        """
+        return  self.resolveOptionDict('../Data/Course.html')
 
     def resolveOptionDict(self, fileName):
         """
@@ -58,27 +62,17 @@ class WSHttp():
         root = etree.parse(fileName, parser=parser)
         options = root.findall('//option[@value]')
         result_dict = dict()
-        times_dict = dict()
         for option in options:
-            if option.text not in result_dict.keys():
-                result_key = option.text
-            else:
-                if option.text not in times_dict.keys():
-                    times_dict[option.text] = 1
-                else:
-                    times_dict[option.text] += 1
-                result_key = option.text + '_' + str(times_dict[option.text])
-            result_dict[result_key] = option.attrib['value']
+            result_dict[option.attrib['value']] = option.text
         return result_dict
 
-
-    def postCourse(self, tNum, valCode, semester, type):
+    def postTeacherCourse(self, teacher_id, valCode, semester, type):
         """
         提交post数据，获取教师的课程信息
         :return: str
         """
         url = 'http://gl.sycm.com.cn/Jwweb/ZNPK/TeacherKBFB_rpt.aspx'
-        values = {'Sel_XNXQ': semester, 'Sel_JS': tNum, 'txt_yzm': valCode, 'type': type}
+        values = {'Sel_XNXQ': semester, 'Sel_JS': teacher_id, 'txt_yzm': valCode, 'type': type}
         data = urllib.urlencode(values)
         request = urllib2.Request(url, data)
         request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0')
@@ -87,6 +81,20 @@ class WSHttp():
         page = response.read()
         return page.decode('gbk', 'ignore').encode('utf-8')
 
+    def postCourseInfo(self, course_id, valCode, semester, type):
+        """
+        提交post数据，获取课程信息
+        :return: str
+        """
+        url = 'http://gl.sycm.com.cn/Jwweb/ZNPK/KBFB_LessonSel_rpt.aspx'
+        values = {'Sel_XNXQ': semester, 'Sel_KC': course_id, 'txt_yzm': valCode, 'gs': type}
+        data = urllib.urlencode(values)
+        request = urllib2.Request(url, data)
+        request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0')
+        request.add_header('Referer', 'http://gl.sycm.com.cn/Jwweb/ZNPK/KBFB_LessonSel.aspx')
+        response = self.opener.open(request)
+        page = response.read()
+        return page.decode('gbk', 'ignore').encode('utf-8')
 
     def isCorrectValCode(self, page):
         if page.find('验证码错误') == -1:
@@ -94,8 +102,7 @@ class WSHttp():
         else:
             return False
 
-
-    def resolveCourseDict(self, page):
+    def resolveCourseTable(self, page):
         """
         解析课程数据，以字典形式返回
         :param page: str, post取得的数据
@@ -126,19 +133,29 @@ class WSHttp():
         c_dict['course'] = data
         return c_dict
 
-
-    def courseDictWrapper(self, tNum, valCode, semester, type='1'):
+    def courseTableWrapper(self, teacher_id, valCode, semester, type='1'):
         try:
-            page = self.postCourse(tNum,  valCode, semester, type)
+            page = self.postTeacherCourse(teacher_id, valCode, semester, type)
             if not self.isCorrectValCode(page):
                 return {'status': VAL_CODE_INCORRECT}
-            return self.resolveCourseDict(page)
+            return self.resolveCourseTable(page)
         except urllib2.HTTPError, e:
             return {'status': e.code}
         except urllib2.URLError, e:
             return {'status': e.errno}
             pass
 
+    def courseInfoWrapper(self, course_id, valCode, semester, type='1'):
+        try:
+            page = self.postCourseInfo(course_id, valCode, semester, type)
+            if not self.isCorrectValCode(page):
+                return {'status': VAL_CODE_INCORRECT}
+            return self.resolveCourseTable(page)
+        except urllib2.HTTPError, e:
+            return {'status': e.code}
+        except urllib2.URLError, e:
+            return {'status': e.errno}
+            pass
 
 if __name__ == '__main__':
     client = WSHttp()
@@ -146,4 +163,5 @@ if __name__ == '__main__':
     f.write(client.getValCode())
     f.close()
     val_code = raw_input('val_code:')
-    print client.courseDictWrapper('0000063', val_code, '20141')
+    # print client.courseDictWrapper('0000063', val_code, '20141')
+    print client.courseInfoWrapper('000003', val_code, '20141')

@@ -60,7 +60,7 @@ def webGetTeacherCourse(teacher_id, val_code, semester):
     print 'webGetTeacherCourse'
     if 'id' not in session:
         abort(400)
-    data = c_dict[session['id']].courseDictWrapper(teacher_id, val_code, semester)
+    data = c_dict[session['id']].courseTableWrapper(teacher_id, val_code, semester)
     del c_dict[session['id']]
     return data
 
@@ -84,7 +84,11 @@ def saveTeacherCourseData(teacher_id, semester, data):
     """
     print 'saveTeacherCourseData'
     j_data = json.dumps(data)
-    teacher_course = TeacherCourse(teacher_id=teacher_id, semester=semester, course_data=j_data)
+    teacher_course = TeacherCourse.query.filter_by(teacher_id=teacher_id, semester=semester).first()
+    if teacher_course is None:
+        teacher_course = TeacherCourse(teacher_id=teacher_id, semester=semester, course_data=j_data)
+    else:
+        teacher_course.course_data = j_data
     db.session.add(teacher_course)
     db.session.commit()
 
