@@ -104,7 +104,6 @@ def courseInfo():
     semester = '20141'
     val_code = ''
     if 'val_code' in request.json:
-        print 11
         val_code = request.json['val_code']
     if 'semester' in request.json:
         semester = request.json['semester']
