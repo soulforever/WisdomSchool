@@ -1,0 +1,99 @@
+# -*- coding: utf-8 -*-
+
+"""
+视图函数
+"""
+
+__author__ = 'guti'
+
+import json
+import WSHttp
+import time
+from app import app, db
+from flask import request, abort, jsonify, session
+from models import TeacherCourse
+
+
+c_dict = dict()
+
+@app.route('/ws/api/valcode')
+def getValCode():
+    """
+    验证码获取视图
+    """
+    if 'id' not in session:
+        tag = time.time()
+        session['id'] = tag
+        client = c_dict[tag] = WSHttp.WSHttp()
+    else:
+        client = c_dict[session['id']]
+    return client.getValCode()
+
+
+@app.route('/ws/api/teacher', methods=['POST'])
+def teacherCourseDict():
+    """
+    教师信息获取，无验证码表示从本地查询，带有验证码表示从远端获取
+    """
+    if not request.json or 'teacher_id' not in request.json:
+        abort(404)
+    teacher_id = request.json['teacher_id']
+    semester = '20141'
+    val_code = ''
+    if 'val_code' in request.json:
+        val_code = request.json['val_code']
+    if 'semester' in request.json:
+        semester = request.json['semester']
+    # 分离查询逻辑
+    if val_code == '':
+        data = localGetTeacherCourse(teacher_id, semester)
+    else:
+        data = webGetTeacherCourse(teacher_id, val_code, semester)
+        saveTeacherCourseData(teacher_id, semester, data)
+    return jsonify(data), 201
+
+
+def webGetTeacherCourse(teacher_id, val_code, semester):
+    """
+    远端获取教师课程数据
+    """
+    print 'webGetTeacherCourse'
+    if 'id' not in session:
+        abort(400)
+    data = c_dict[session['id']].courseDictWrapper(teacher_id, val_code, semester)
+    del c_dict[session['id']]
+    return data
+
+
+def localGetTeacherCourse(teacher_id, semester):
+    """
+    本地查询教师课程
+    """
+    print 'localGetTeacherCourse'
+    teacher_course = TeacherCourse.query.filter_by(teacher_id=teacher_id, semester=semester).first()
+    if teacher_course is None:
+        data = {'status': WSHttp.LOCAL_DATA_MISS}
+    else:
+        data = json.loads(teacher_course.course_data, encoding='utf-8')
+    return data
+
+
+def saveTeacherCourseData(teacher_id, semester, data):
+    """
+    保存远端下载的教师课程数据到本地数据库
+    """
+    print 'saveTeacherCourseData'
+    j_data = json.dumps(data)
+    teacher_course = TeacherCourse(teacher_id=teacher_id, semester=semester, course_data=j_data)
+    db.session.add(teacher_course)
+    db.session.commit()
+
+
+@app.errorhandler(404)
+def error_404():
+    return jsonify({'status': 404})
+
+
+@app.errorhandler(500)
+def error_500():
+    return jsonify({'status': 500})
