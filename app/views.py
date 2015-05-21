@@ -60,7 +60,7 @@ def webGetTeacherCourse(teacher_id, val_code, semester):
     print 'webGetTeacherCourse'
     if 'id' not in session:
         abort(400)
-    data = c_dict[session['id']].courseTableWrapper(teacher_id, val_code, semester)
+    data = c_dict[session['id']].teacherCourseWrapper(teacher_id, val_code, semester)
     del c_dict[session['id']]
     return data
 

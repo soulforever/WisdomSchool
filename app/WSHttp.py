@@ -133,7 +133,11 @@ class WSHttp():
         c_dict['course'] = data
         return c_dict
 
-    def courseTableWrapper(self, teacher_id, valCode, semester, type='1'):
+    def teacherCourseWrapper(self, teacher_id, valCode, semester, type='1'):
+        """
+        供view视图调用的包装函数，提供教师课程查询的字典数据
+        :return: dict
+        """
         try:
             page = self.postTeacherCourse(teacher_id, valCode, semester, type)
             if not self.isCorrectValCode(page):
@@ -146,6 +150,10 @@ class WSHttp():
             pass
 
     def courseInfoWrapper(self, course_id, valCode, semester, type='1'):
+        """
+        供view视图调用的包装函数，提供课程信息的查询字典数据
+        :return:
+        """
         try:
             page = self.postCourseInfo(course_id, valCode, semester, type)
             if not self.isCorrectValCode(page):
