@@ -9,7 +9,7 @@ __author__ = 'guti'
 import json
 import WSHttp
 import time
-from app import app, db
+from app import app, db, cache
 from flask import request, abort, jsonify, session
 from models import TeacherCourse, CourseInfo
 
@@ -30,6 +30,7 @@ def getValCode():
     return client.getValCode()
 
 
+@cache.cached(timeout=50)
 @app.route('/ws/api/teacher', methods=['POST'])
 def teacherCourse():
     """
@@ -93,6 +94,7 @@ def saveTeacherCourseData(teacher_id, semester, data):
     db.session.commit()
 
 
+@cache.cached(timeout=50)
 @app.route('/ws/api/course', methods=['POST'])
 def courseInfo():
     """
