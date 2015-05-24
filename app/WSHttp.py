@@ -99,7 +99,7 @@ class WSHttp():
     def postClassroomInfo(self, campus_id, building_id, room_id, valCode, semester):
         url = 'http://gl.sycm.com.cn/Jwweb/ZNPK/KBFB_RoomSel_rpt.aspx'
         values = {'Sel_XNXQ': semester, 'Sel_XQ': campus_id, 'Sel_JXL': building_id,
-                  'Sel_ROOM': room_id, 'txt_yzm': val_code}
+                  'Sel_ROOM': room_id, 'txt_yzm': valCode}
         data = urllib.urlencode(values)
         request = urllib2.Request(url, data)
         request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0')
