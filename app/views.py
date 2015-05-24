@@ -73,7 +73,7 @@ def webGetTeacherCourse(teacher_id, val_code, semester):
     """
     print 'webGetTeacherCourse'
     if 'id' not in session:
-        abort(400)
+        abort(404)
     data = c_dict[session['id']].teacherCourseWrapper(teacher_id, val_code, semester)
     del c_dict[session['id']]
     return data
@@ -137,7 +137,7 @@ def webGetCourseInfo(course_id, val_code, semester):
     """
     print 'webGetCourseInfo'
     if 'id' not in session:
-        abort(400)
+        abort(404)
     data = c_dict[session['id']].courseInfoWrapper(course_id, val_code, semester)
     del c_dict[session['id']]
     return data
@@ -201,9 +201,8 @@ def webGetClassroomInfo(room_id, val_code, semester):
     """
     print 'webGetClassroomInfo'
     if 'id' not in session:
-        abort(400)
-    print room_id[0], room_id[:2], room_id
-    data = c_dict[session['id']].classroomInfoWrapper(room_id[0], room_id[:2], room_id, val_code, semester)
+        abort(404)
+    data = c_dict[session['id']].classroomInfoWrapper(room_id[0], room_id[:3], room_id, val_code, semester)
     del c_dict[session['id']]
     return data
 
