@@ -9,6 +9,7 @@ __author__ = 'guti'
 import json
 import WSHttp
 import time
+from urllib2 import HTTPError, URLError
 from app import app, db, cache
 from flask import request, abort, jsonify, session
 from models import TeacherCourse, CourseInfo, ClassroomInfo
@@ -27,7 +28,11 @@ def getValCode():
         client = c_dict[tag] = WSHttp.WSHttp()
     else:
         client = c_dict[session['id']]
-    return client.getValCode()
+    data = client.getValCode()
+    if isinstance(data, dict):
+        return jsonify(data)
+    else:
+        return data
 
 
 @cache.cached(timeout=50)
@@ -50,7 +55,13 @@ def teacherCourse():
         data = localGetTeacherCourse(teacher_id, semester)
     else:
         data = webGetTeacherCourse(teacher_id, val_code, semester)
-        saveTeacherCourseData(teacher_id, semester, data)
+        if 'status' not in data:
+            saveTeacherCourseData(teacher_id, semester, data)
+    if 'status' not in data:
+        if data:
+            data['status'] = WSHttp.COURSE_DATA_CORRECT
+        else:
+            data['status'] = WSHttp.COURSE_DATA_EMPTY
     return jsonify(data), 201
 
 
@@ -114,7 +125,13 @@ def courseInfo():
         data = localGetCourseIndfo(course_id, semester)
     else:
         data = webGetCourseInfo(course_id, val_code, semester)
-        saveCourseInfoData(course_id, semester, data)
+        if 'status' not in data:
+            saveCourseInfoData(course_id, semester, data)
+    if 'status' not in data:
+        if data:
+            data['status'] = WSHttp.COURSE_DATA_CORRECT
+        else:
+            data['status'] = WSHttp.COURSE_DATA_EMPTY
     return jsonify(data), 201
 
 
@@ -178,7 +195,13 @@ def classroomInfo():
         data = localGetClassroomInfo(room_id, semester)
     else:
         data = webGetClassroomInfo(room_id, val_code, semester)
-        saveClassroomInfoData(room_id, semester, data)
+        if 'status' not in data:
+            saveClassroomInfoData(room_id, semester, data)
+    if 'status' not in data:
+        if data:
+            data['status'] = WSHttp.COURSE_DATA_CORRECT
+        else:
+            data['status'] = WSHttp.COURSE_DATA_EMPTY
     return jsonify(data), 201
 
 

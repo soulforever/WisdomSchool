@@ -33,9 +33,9 @@ def postCourse2(tNum, semester):
     return response.read()
 
 if __name__ == '__main__':
-    f = open('/home/guti/Downloads/test.jpeg', 'wb')
+    f = open('d:/test.jpeg', 'wb')
     f.write(getValCode())
     f.close()
     val_code = raw_input('val_code:')
-    print postCourse('0000063', val_code, '20141')
+    print postCourse('0000617', val_code, '20141')
     # print postCourse2('0000063', '20141')

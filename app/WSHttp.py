@@ -12,6 +12,9 @@ from lxml import etree
 
 VAL_CODE_INCORRECT = 2000
 LOCAL_DATA_MISS = 2001
+COURSE_DATA_EMPTY = 2002
+COURSE_DATA_CORRECT = 2003
+WEB_CONNECTION_ERROR = 404
 
 class WSHttp():
     """
@@ -27,9 +30,14 @@ class WSHttp():
         获取验证码图片数据, 并保存cookie
         :return: str, 验证码图片数据
         """
-        response = self.opener.open('http://gl.sycm.com.cn/Jwweb/sys/ValidateCode.aspx')
-        data = response.read()
-        return data
+        try:
+            response = self.opener.open('http://gl.sycm.com.cn/Jwweb/sys/ValidateCode.aspx')
+            data = response.read()
+            return data
+        except urllib2.HTTPError:
+            return {'status': WEB_CONNECTION_ERROR}
+        except urllib2.URLError:
+            return {'status': WEB_CONNECTION_ERROR}
 
     def resolveTeacherDict(self):
         """
@@ -155,10 +163,10 @@ class WSHttp():
             if not self.isCorrectValCode(page):
                 return {'status': VAL_CODE_INCORRECT}
             return self.resolveCourseTable(page)
-        except urllib2.HTTPError, e:
-            return {'status': e.code}
-        except urllib2.URLError, e:
-            return {'status': e.errno}
+        except urllib2.HTTPError:
+            return {'status': WEB_CONNECTION_ERROR}
+        except urllib2.URLError:
+            return {'status': WEB_CONNECTION_ERROR}
 
     def courseInfoWrapper(self, course_id, valCode, semester, type='1'):
         """
@@ -170,10 +178,10 @@ class WSHttp():
             if not self.isCorrectValCode(page):
                 return {'status': VAL_CODE_INCORRECT}
             return self.resolveCourseTable(page)
-        except urllib2.HTTPError, e:
-            return {'status': e.code}
-        except urllib2.URLError, e:
-            return {'status': e.errno}
+        except urllib2.HTTPError:
+            return {'status': WEB_CONNECTION_ERROR}
+        except urllib2.URLError:
+            return {'status': WEB_CONNECTION_ERROR}
 
     def classroomInfoWrapper(self, campus_id, building_id, room_id, valCode, semester):
         try:
@@ -181,10 +189,10 @@ class WSHttp():
             if not self.isCorrectValCode(page):
                 return {'status': VAL_CODE_INCORRECT}
             return self.resolveCourseTable(page)
-        except urllib2.HTTPError, e:
-            return {'status': e.code}
-        except urllib2.URLError, e:
-            return {'status': e.errno}
+        except urllib2.HTTPError:
+            return {'status': WEB_CONNECTION_ERROR}
+        except urllib2.URLError:
+            return {'status': WEB_CONNECTION_ERROR}
 
 
 if __name__ == '__main__':
