@@ -196,14 +196,4 @@ class WSHttp():
 
 
 if __name__ == '__main__':
-    import json
-    client = WSHttp()
-    f = open('d:\\test.jpeg', 'wb')
-    f.write(client.getValCode())
-    f.close()
-    val_code = raw_input('val_code:')
-    # print client.courseDictWrapper('0000063', val_code, '20141')
-    # d = client.classroomInfoWrapper('1', '105', '1050101', val_code, '20141')
-    d = client.courseInfoWrapper('000003', val_code, '20141')
-    print d
-    print json.dumps(d, indent=4)
+    print __doc__

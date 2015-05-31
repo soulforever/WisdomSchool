@@ -9,7 +9,6 @@ __author__ = 'guti'
 import json
 import WSHttp
 import time
-from urllib2 import HTTPError, URLError
 from app import app, db, cache
 from flask import request, abort, jsonify, session
 from models import TeacherCourse, CourseInfo, ClassroomInfo
