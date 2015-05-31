@@ -29,9 +29,9 @@ def getValCode():
         client = c_dict[session['id']]
     data = client.getValCode()
     if isinstance(data, dict):
-        return jsonify(data)
+        return jsonify(data), 404
     else:
-        return data
+        return data, 201
 
 
 @cache.cached(timeout=50)
