@@ -37,5 +37,5 @@ if __name__ == '__main__':
     f.write(getValCode())
     f.close()
     val_code = raw_input('val_code:')
-    print postCourse('0000617', val_code, '20141')
+    print postCourse('0000321', val_code, '20141')
     # print postCourse2('0000063', '20141')
